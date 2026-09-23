@@ -1,0 +1,27 @@
+name: branch_protection_rule--no-match
+on:
+  branch_protection_rule:
+    types: [lab_no_match]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute independent event and checkout probe
+        env:
+          LAB_CASE: branch_protection_rule--no-match
+          EVENT_FAMILY: branch_protection_rule
+          EXPR_EVENT: ${{ toJSON(github.event) }}
+          EXPR_REF: ${{ github.ref }}
+          EXPR_SHA: ${{ github.sha }}
+          EXPR_ACTION: ${{ github.event.action }}
+        run: node probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence
+          path: evidence/
+          retention-days: 30

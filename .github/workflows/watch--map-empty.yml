@@ -1,0 +1,44 @@
+name: watch--map-empty
+on:
+  watch: {}
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute independent event and checkout probe
+        env:
+          LAB_CASE: watch--map-empty
+          EVENT_FAMILY: watch
+          EXPR_EVENT: ${{ toJSON(github.event) }}
+          EXPR_REF: ${{ github.ref }}
+          EXPR_SHA: ${{ github.sha }}
+          EXPR_ACTION: ${{ github.event.action }}
+        run: node probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence
+          path: evidence/
+          retention-days: 30
+  intentional-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 23
+  must-skip:
+    needs: intentional-failure
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo UNEXPECTED_EXECUTION; exit 24
+  observes-failure:
+    needs: [intentional-failure, must-skip]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          FAILED_RESULT: ${{ needs.intentional-failure.result }}
+          SKIPPED_RESULT: ${{ needs.must-skip.result }}
+        run: test "$FAILED_RESULT" = failure && test "$SKIPPED_RESULT" = skipped

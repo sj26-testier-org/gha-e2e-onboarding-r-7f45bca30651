@@ -1,0 +1,26 @@
+name: discussion--map-empty
+on:
+  discussion: {}
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute independent event and checkout probe
+        env:
+          LAB_CASE: discussion--map-empty
+          EVENT_FAMILY: discussion
+          EXPR_EVENT: ${{ toJSON(github.event) }}
+          EXPR_REF: ${{ github.ref }}
+          EXPR_SHA: ${{ github.sha }}
+          EXPR_ACTION: ${{ github.event.action }}
+        run: node probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence
+          path: evidence/
+          retention-days: 30
