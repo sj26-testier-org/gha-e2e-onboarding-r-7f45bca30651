@@ -1,0 +1,7 @@
+name: decoy-poison
+on: [fork, public, gollum, page_build, watch, milestone, branch_protection_rule, discussion, discussion_comment]
+jobs:
+  poison:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo WRONG_WORKFLOW_SOURCE; exit 99
